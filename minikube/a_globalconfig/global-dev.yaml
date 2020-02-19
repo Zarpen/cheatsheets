@@ -5,8 +5,18 @@ metadata:
   namespace: default
 data:
   global_pipeline_stage: "development"
+  api1_node: "http://api-service-1-service"
+  api1_fusionauth: "http://192.168.99.100:32376"
+  api1_fusionauth_client: "c52f7df4-7f82-4dda-a77a-a84e87ac7bde"
+  api1_fusionauth_secret: "hxrt9XfodtmJJldt_g6Z3bNscTtXcU_n0B5tw6ETrWs"
+  api1_service: "http://192.168.99.100:32614"
+  api1_graphql: "http://192.168.99.100:31881"
   api2_python: "http://api-service-2-service"
   api3_go: "http://api-service-3-service"
+  api2_graphql: "http://api-service-4-api2-service"
+  api3_graphql: "http://api-service-4-api3-service"
+  api4_gateway_graphql: "http://api-service-4-service"
+  fusionauth: "http://fusionauth"
   redis_connect: "redis://redis-service:6379/0"
   pg_user: "test_user"
   pg_database: "test_db"

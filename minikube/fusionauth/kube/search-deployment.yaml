@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search
+  labels:
+    app: search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: search
+    spec:
+      initContainers:
+      - name: init-sysctl
+        image: busybox:1.27.2
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      containers:
+      - name: search
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+        env:
+        - name: ES_JAVA_OPTS
+          value: -Xms2g -Xmx2g
+        - name: cluster.name
+          value: fusionauth
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        volumeMounts:
+        - mountPath: /usr/share/elasticsearch/data
+          name: es-data
+      restartPolicy: Always
+      volumes:
+      - name: es-data
+        persistentVolumeClaim:
+          claimName: es-data
+status: {}

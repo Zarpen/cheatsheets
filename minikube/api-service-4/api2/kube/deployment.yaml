@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-service-3-deployment
+  name: api-service-4-api2-deployment
   labels:
-    app: api-service-3
+    app: api-service-4-api2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api-service-3
+      app: api-service-4-api2
   template:
     metadata:
       labels:
-        app: api-service-3
+        app: api-service-4-api2
     spec:
       containers:
-        - name: api-service-3-container
-          image: saul/api-service-3:latest
+        - name: api-service-4-api2-container
+          image: saul/api-service-4-api2:latest
           imagePullPolicy: Never
           ports:
-            - containerPort: 8001
+            - containerPort: 4110
           envFrom:
             - configMapRef:
                 name: global-config
@@ -34,10 +34,10 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: api-service-3-service
+  name: api-service-4-api2-service
   namespace: default
   labels:
-    app: api-service-3
+    app: api-service-4-api2
 spec:
   ports:
     - name: http
@@ -45,8 +45,11 @@ spec:
       #      port = port connected to ingress
       port: 80
       # targetPort = port on container
-      targetPort: 8001
+      targetPort: 4110
   selector:
-    app: api-service-3
+    app: api-service-4-api2
+  type: NodePort
+  sessionAffinity: None
+  externalTrafficPolicy: Cluster
 status:
   loadBalancer: {}

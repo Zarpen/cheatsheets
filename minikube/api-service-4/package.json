@@ -1,0 +1,22 @@
+{
+  "name": "graphql-endpoint",
+  "main": "index.js",
+  "scripts": {
+    "start-gateway": "nodemon index.js",
+    "start-service-api2": "nodemon services/api2/index.js",
+    "start-service-api3": "nodemon services/api3/index.js",
+    "start-services": "concurrently \"npm:start-service-*\"",
+    "postinstall": "lerna bootstrap"
+  },
+  "devDependencies": {
+    "lerna": "latest",
+    "nodemon": "latest",
+    "concurrently": "latest"
+  },
+  "dependencies": {
+    "apollo-datasource-rest": "^0.7.0",
+    "@apollo/gateway": "latest",
+    "apollo-server": "latest",
+    "graphql": "latest"
+  }
+}
