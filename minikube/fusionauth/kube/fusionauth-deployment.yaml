@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fusionauth
+  labels:
+    app: fusionauth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fusionauth
+  template:
+    metadata:
+      labels:
+        app: fusionauth
+    spec:
+      containers:
+      - env:
+        - name: DATABASE_USER
+          value: fusionauth
+        - name: DATABASE_PASSWORD
+          value: hkaLBM3RVnyYeYeqE3WI1w2e4Avpy0Wd5O3s3
+        - name: DATABASE_ROOT_PASSWORD
+          valueFrom:
+                secretKeyRef:
+                  name: mysecrets
+                  key: POSTGRES_PASSWORD
+        - name: DATABASE_ROOT_USER
+          value: db_user
+        - name: DATABASE_URL
+          value: jdbc:postgresql://db:5432/fusionauth
+        - name: FUSIONAUTH_MEMORY
+          value: 256M
+        - name: FUSIONAUTH_SEARCH_SERVERS
+          value: http://search:9200
+        name: fusionauth
+        image: saul/fusionauth:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 9011
+        #resources:
+        #  limits:
+        #    memory: "200Mi"
+        #    cpu: "100m"
+        #  requests:
+        #    memory: "50Mi"
+        #    cpu: "50m"    
+        #volumeMounts:
+        #  - mountPath: /usr/local/fusionauth/config
+        #    name: fa-config
+      #volumes:
+      #- name: fa-config
+      #  persistentVolumeClaim:
+      #    claimName: fa-config
+status: {}
