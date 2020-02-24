@@ -18,6 +18,7 @@ const fusionAuthClient = `${process.env.api1_fusionauth_client}`;
 const fusionAuthSecret = `${process.env.api1_fusionauth_secret}`;
 const serviceEndpoint = `${process.env.api1_service}`;
 const graphqlEndpoint = `${process.env.api1_graphql}`;
+const kwEndpoint = `${process.env.api1_kw}`;
 
 const {FusionAuthClient} = require('@fusionauth/node-client');
 
@@ -44,21 +45,51 @@ app.get('/oauth-redirect', function (req, res, next) {
                                      fusionAuthSecret,
                                      redirectUrlFusionAuth)
   .then((response) => {
-    req.session.token = response.successResponse.access_token;
-    res.redirect(302, '/');
+    fetch(kwEndpoint, { headers: {"user_id" : fusionAuthClient, "user_token": response.successResponse.access_token, "user_end_session": "false" } })
+    .then(subres => subres.json()) // expecting a json response
+    .then(json => {
+      if(json.token && json.token != "none"){
+        res.redirect(302, '/');
+      }else{
+        res.redirect(302, '/login');
+      }
+    })
+    .catch(error => res.status(400).send(error));
   });
+});
+
+app.post('/fusionauth-webhook',(req, res) => {
+  const request = req.body;
+
+  console.log("logout from fusionauth " + request.event.type);
+
+  if (request.event.type === 'jwt.refresh-token.revoke') {
+    fetch(kwEndpoint, { headers: {"user_id" : fusionAuthClient, "user_token": "none", "user_end_session": "true" } })
+    .then(subres => subres.json()) // expecting a json response
+    .then(json => {
+      console.log("logout from fusionauth");
+      res.status(200).send();
+    })
+    .catch(error => res.status(400).send(error));
+  }
 });
 
 // TEST FRONTEND
 
 app.get('/', function(req,res){
-    if(!req.session || !req.session.token){
-        res.redirect(302, '/login');
+  // Search for token on cache
+  fetch(kwEndpoint, { headers: {"user_id" : fusionAuthClient, "user_token": "none", "user_end_session": "false" } })
+  .then(subres => subres.json()) // expecting a json response
+  .then(json => {
+    if(json.token && json.token != "none"){
+      res.status(200).send(
+          "<a href='/data'>View GraphQL data</a><a href='/logout'>Logout</a>"
+      );
     }else{
-        res.status(200).send(
-            "<a href='/data'>View GraphQL data</a><a href='/logout'>Logout</a>"
-        );
+      res.redirect(302, '/login');
     }
+  })
+  .catch(error => res.status(400).send(error));
 });
 
 app.get('/login', function(req,res){
@@ -66,30 +97,46 @@ app.get('/login', function(req,res){
 });
 
 app.get('/logout', function(req,res){
-    req.session.destroy();
-    res.redirect(302, '/login');
+    fetch(kwEndpoint, { headers: {"user_id" : fusionAuthClient, "user_token": "none", "user_end_session": "true" } })
+    .then(subres => subres.json()) // expecting a json response
+    .then(json => {
+      console.log(json);
+      if(!json.fromCache && !json.cached){
+        res.redirect(302, fusionAuthEndpoint + "/oauth2/logout?client_id=" + fusionAuthClient + "&post_logout_redirect_uri=" + serviceEndpoint);
+      }else{
+        res.redirect(302, '/');
+      }
+    })
+    .catch(error => res.status(400).send(error));
 });
 
 
 app.get('/data', function (req, res) {
 
     try{
-        if(!req.session || !req.session.token){
-            res.redirect(302, '/login');
-        }else{
+        // Search for token on cache
+        fetch(kwEndpoint, { headers: {"user_id" : fusionAuthClient, "user_token": "none", "user_end_session": "false" } })
+        .then(subres => subres.json()) // expecting a json response
+        .then(json => {
+          if(json.token && json.token != "none"){
+            console.log(json.token);
             const query = `{
-              getItemApi2(id:1) {
-                item_id
-              }
-              getItemApi3(id:2) {
-                item_id
-              }
-            }`;
+                getItemApi2(id:1) {
+                  item_id
+                }
+                getItemApi3(id:2) {
+                  item_id
+                }
+              }`;
 
-            request(graphqlEndpoint, query).then(data => {
-                res.status(200).send(data);
-            });
-        }
+              request(graphqlEndpoint, query).then(data => {
+                  res.status(200).send(data);
+              }).catch(error => res.status(400).send(error));
+          }else{
+            res.redirect(302, '/login');
+          }
+        })
+        .catch(error => res.status(400).send(error));
     }catch(e){
         res.status(500).send(e)
     }

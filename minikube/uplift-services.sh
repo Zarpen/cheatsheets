@@ -61,3 +61,6 @@ kubectl apply -f api-service-4/api3/kube/deployment.yaml
 
 docker build -t saul/api-service-4 api-service-4/.
 kubectl apply -f api-service-4/kube/deployment.yaml
+
+docker build -t saul/api-service-5 api-service-5/.
+kubectl apply -f api-service-5/kube/deployment.yaml
